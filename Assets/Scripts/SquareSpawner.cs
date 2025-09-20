@@ -6,7 +6,7 @@ public class SquareSpawner : MonoBehaviour
     private Color previewColor = new Color(1f, 1f, 1f, 0.3f);   //I'm calling the Semi-transparent square the preview square because that's what it reminded me of
 
     private float sizePerScrollTick = 0.1f;     //I want to make each tick influence the size smaller so I'm using 0.1
-    private float minSize = 0.1f;       //This so that the square doesn't disappear
+    private float minSize = 0.1f;               //This so that the square doesn't disappear
 
     void Update()
     {
