@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
@@ -15,6 +13,8 @@ public class Player : MonoBehaviour
     public int numberOfTrailBombs = 3;      //How many bombs to spawn in the trail
 
     public float randomCornerDistance = 2f;     //Distance from player to each corner
+
+    public float asteroidLineRange = 8f;        //Max range to check for asteroids
 
     // Update is called once per frame
     void Update()
@@ -38,6 +38,8 @@ public class Player : MonoBehaviour
         {
             WarpToTarget(enemyTransform, 1f);
         }
+
+        DrawAsteroidDirectionLines(asteroidTransforms, asteroidLineRange);
     }
 
 
@@ -88,5 +90,27 @@ public class Player : MonoBehaviour
         if (ratio > 1f) ratio = 1f;
 
         transform.position = Vector3.Lerp(transform.position, target.position, ratio);
+    }
+
+    private void DrawAsteroidDirectionLines(List<Transform> inAsteroids, float maxRange)
+    {
+        if (inAsteroids == null || inAsteroids.Count == 0) return;      //Safety check
+
+        Vector3 origin = transform.position;
+        const float lineLength = 2.5f;
+        float maxRangeSqr = maxRange * maxRange;
+
+        foreach (Transform asteroid in inAsteroids)     //Looping through all the asteroids
+        {
+            if (!asteroid) continue;        //Skip all the null entries 
+
+            Vector3 toAsteroid = asteroid.position - origin;        //Find direction vector
+
+            if (toAsteroid.sqrMagnitude <= maxRangeSqr)     //This checks the range 
+            {
+                Vector3 end = origin + toAsteroid.normalized * lineLength;      //This calculates the line endpoint, this is supposed to end at 2.5f away from the player in the direction of the asteroid.
+                Debug.DrawLine(origin, end, Color.green, 0f);       //Draw the line
+            }
+        }
     }
 }
