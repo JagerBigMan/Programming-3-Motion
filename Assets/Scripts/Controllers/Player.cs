@@ -33,6 +33,11 @@ public class Player : MonoBehaviour
         {
             SpawnBombAtRandomCorner(randomCornerDistance);
         }
+
+        if (Input.GetKeyDown(KeyCode.U))
+        {
+            WarpToTarget(enemyTransform, 1f);
+        }
     }
 
 
@@ -55,7 +60,7 @@ public class Player : MonoBehaviour
 
     private void SpawnBombAtRandomCorner(float inDistance)
     {
-        Vector2 center = transform.position;    //I'm using Vector2 center as the player's location (spaceship)f
+        Vector2 center = transform.position;    //I'm using Vector2 center as the player's location (spaceship)
         Vector2 size = new Vector2(inDistance * 2f, inDistance * 2f);
 
         float halfWidth = size.x * 0.5f;
@@ -73,5 +78,15 @@ public class Player : MonoBehaviour
 
         Instantiate(bombPrefab, chosen, Quaternion.identity);
 
+    }
+
+    private void WarpToTarget(Transform target, float ratio)
+    {
+        if (target == null) return;
+
+        if (ratio < 0f) ratio = 0f;
+        if (ratio > 1f) ratio = 1f;
+
+        transform.position = Vector3.Lerp(transform.position, target.position, ratio);
     }
 }
