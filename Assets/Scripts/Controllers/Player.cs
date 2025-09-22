@@ -8,7 +8,12 @@ public class Player : MonoBehaviour
     public GameObject bombPrefab;
     public Transform bombsTransform;
 
-    public Vector3 velocity = new Vector3(1, 0, 0);     //Not used
+    [Header ("Movement Properties")]
+    public float accelerationTime = 3f;
+    public float maxSpeed = 5f;
+    public float acceleration;
+    public Vector3 velocity;
+
 
     void Update()
     {
@@ -18,21 +23,31 @@ public class Player : MonoBehaviour
 
     private void PlayerMovement()
     {
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        //velocity = Vector3.zero; no longer needed cuz I need the speed to add to it, achieving "accelerating"
+        acceleration = maxSpeed / accelerationTime;
+
+        if (Input.GetKey(KeyCode.LeftArrow))
         {
-            transform.position += new Vector3(-1, 0, 0);
+            //transform.position += new Vector3(-1, 0, 0);  done in class, tried this way to move the ship
+            velocity += acceleration * Time.deltaTime * Vector3.left;
         }
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.RightArrow))
         {
-            transform.position += new Vector3(1, 0, 0);
+            //transform.position += new Vector3(1, 0, 0);
+            velocity += acceleration * Time.deltaTime * Vector3.right;
         }
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKey(KeyCode.UpArrow))
         {
-            transform.position += new Vector3(0, 1, 0);
+            //transform.position += new Vector3(0, 1, 0);
+            velocity += acceleration * Time.deltaTime * Vector3.up;
         }
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKey(KeyCode.DownArrow))
         {
-            transform.position += new Vector3(0, -1, 0);
+            //transform.position += new Vector3(0, -1, 0);
+            velocity += acceleration * Time.deltaTime * Vector3.down;
         }
+
+        velocity = Vector3.ClampMagnitude(velocity, maxSpeed);      //Limits the max speed by clamping
+        transform.position += Time.deltaTime * velocity;
     }
 }
