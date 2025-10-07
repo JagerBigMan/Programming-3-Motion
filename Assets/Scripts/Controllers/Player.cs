@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -11,17 +12,37 @@ public class Player : MonoBehaviour
 
     [Header ("Movement Properties")]
     public float accelerationTime = 3f;
-    public float maxSpeed = 5f;
+    public float baseMaxSpeed = 5f;     //Non-boosting max speed
     public float deceleration = 4f;
     public float acceleration;
     public Vector3 velocity;
 
     [Header("Powerups")]
     public GameObject powerupPrefab;
-    
+
+    [Header("Speed Booster")]
+    public float boostedMaxSpeed = 10f;
+    public float boostRampUp = 6f;      //The acceleration of the  boost, changed the name to avoid confusion
+    public float boostRampDown = 4f;    //The deceleration of the  boost
+
+    [Header("Boost Energy")]
+    public float maxEnergy = 5f;
+    public float energyDrainRate = 1.0f;
+    public float energyRechargeRate = 0.75f;
+    public Slider energyBar;
+
+    private float currentMaxSpeed;
+    private float currentEnergy;
+
+    private void Start()
+    {
+        currentMaxSpeed = baseMaxSpeed;
+        currentEnergy = maxEnergy;
+    }
 
     void Update()
     {
+        HandleBoost();
         PlayerMovement();
         DrawDetectionCircle(5f, 64);
         
@@ -34,7 +55,7 @@ public class Player : MonoBehaviour
 
     private void PlayerMovement()
     {
-        acceleration = maxSpeed / accelerationTime;
+        acceleration = currentMaxSpeed / accelerationTime;
 
         if (Input.GetKey(KeyCode.LeftArrow))
         {
@@ -61,7 +82,7 @@ public class Player : MonoBehaviour
         }
 
 
-        velocity = Vector3.ClampMagnitude(velocity, maxSpeed);      //Limits the max speed by clamping
+        velocity = Vector3.ClampMagnitude(velocity, currentMaxSpeed);      //Limits the max speed by clamping
         transform.position += Time.deltaTime * velocity;
     }
 
@@ -110,5 +131,26 @@ public class Player : MonoBehaviour
             Vector3 spawnPosition = transform.position + new Vector3(x, y, 0f);
             Instantiate(powerupPrefab, spawnPosition, Quaternion.identity);
         }
+    }
+
+    private void HandleBoost()
+    {
+        bool boost = Input.GetKey(KeyCode.Space) && currentEnergy > 0f;
+
+        float targetCap = boost ? boostedMaxSpeed : baseMaxSpeed;
+        float ramp = boost ? boostRampUp : boostRampDown;
+        currentMaxSpeed = Mathf.MoveTowards(currentMaxSpeed, targetCap, ramp * Time.deltaTime);
+
+        if (boost)
+        {
+            currentEnergy -= energyDrainRate * Time.deltaTime;
+            if (currentEnergy < 0f) currentEnergy = 0f;
+        }
+        else
+        {
+            currentEnergy += energyRechargeRate * Time.deltaTime;
+            if (currentEnergy > maxEnergy) currentEnergy = maxEnergy;
+        }
+
     }
 }
