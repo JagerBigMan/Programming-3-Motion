@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +9,7 @@ public class Player : MonoBehaviour
     public GameObject bombPrefab;
     public Transform bombsTransform;
 
-    [Header ("Movement Properties")]
+    [Header("Movement Properties")]
     public float accelerationTime = 3f;
     public float baseMaxSpeed = 5f;     //Non-boosting max speed
     public float deceleration = 4f;
@@ -34,10 +33,25 @@ public class Player : MonoBehaviour
     private float currentMaxSpeed;
     private float currentEnergy;
 
+    [Header("Wingmen")]
+    public GameObject wingmenPrefab;
+    public float wingmenOrbitRadius = 2f;
+    public float wingmenOrbitSpeed = 10f;   //Degrees per second    
+    public bool toggleSpawn = true;         //If true, W toggles on/off, if false, W respawns the wingmen pair
+
+    private Transform wingmenPivot;
+    private GameObject leftWingman;
+    private GameObject rightWingman;
+
     private void Start()
     {
         currentMaxSpeed = baseMaxSpeed;
         currentEnergy = maxEnergy;
+
+        wingmenPivot = new GameObject("WingmanPivot").transform;
+        wingmenPivot.SetParent(transform);
+        wingmenPivot.localPosition = Vector3.zero;
+        wingmenPivot.localRotation = Quaternion.identity;
     }
 
     void Update()
@@ -45,12 +59,14 @@ public class Player : MonoBehaviour
         HandleBoost();
         PlayerMovement();
         DrawDetectionCircle(5f, 64);
-        
+
         if (Input.GetKeyDown(KeyCode.P))
         {
             SpawnPowerups(6, 4f); //6 powerups at radius 4 units
         }
 
+        HandleWingmenInput();
+        RotateWingmen();
     }
 
     private void PlayerMovement()
@@ -73,12 +89,12 @@ public class Player : MonoBehaviour
         {
             velocity += acceleration * Time.deltaTime * Vector3.down;
         }
-        if(!Input.GetKey(KeyCode.LeftArrow) &&
+        if (!Input.GetKey(KeyCode.LeftArrow) &&
            !Input.GetKey(KeyCode.RightArrow) &&
            !Input.GetKey(KeyCode.UpArrow) &&
-           !Input.GetKey (KeyCode.DownArrow))
+           !Input.GetKey(KeyCode.DownArrow))
         {
-            velocity = Vector3.MoveTowards(velocity,Vector3.zero, deceleration * Time.deltaTime);
+            velocity = Vector3.MoveTowards(velocity, Vector3.zero, deceleration * Time.deltaTime);
         }
 
 
@@ -117,7 +133,7 @@ public class Player : MonoBehaviour
 
     private void SpawnPowerups(int numberofPowerups, float radius)
     {
-        if (powerupPrefab == null || numberofPowerups <= 0) return; 
+        if (powerupPrefab == null || numberofPowerups <= 0) return;
 
         float angleStep = 2f * Mathf.PI / numberofPowerups;
 
@@ -125,7 +141,7 @@ public class Player : MonoBehaviour
         {
             float angle = i * angleStep;
 
-            float x = Mathf.Cos(angle) * radius;    
+            float x = Mathf.Cos(angle) * radius;
             float y = Mathf.Sin(angle) * radius;
 
             Vector3 spawnPosition = transform.position + new Vector3(x, y, 0f);
@@ -152,5 +168,47 @@ public class Player : MonoBehaviour
             if (currentEnergy > maxEnergy) currentEnergy = maxEnergy;
         }
 
+    }
+
+    private void HandleWingmenInput()
+    {
+        if (!Input.GetKeyDown(KeyCode.W)) return;
+
+        bool exists = leftWingman != null || rightWingman != null;
+
+        if (toggleSpawn & exists)
+        {
+            DespawnWingmen();
+        }
+        else
+        {
+            SpawnWingmenPair();
+        }
+    }
+    private void SpawnWingmenPair()
+    {
+        if (wingmenPrefab == null || wingmenPivot == null) return;
+
+        DespawnWingmen();
+
+        leftWingman = Instantiate(wingmenPrefab,wingmenPivot.position + Vector3.left * wingmenOrbitRadius, Quaternion.identity);
+        rightWingman = Instantiate(wingmenPrefab,wingmenPivot.position + Vector3.right * wingmenOrbitRadius, Quaternion.identity);
+
+        leftWingman.transform.SetParent(wingmenPivot);
+        rightWingman.transform.SetParent(wingmenPivot);
+    }
+
+    private void RotateWingmen()
+    {
+        if (wingmenPivot == null) return;
+        wingmenPivot.Rotate(0f,0f, wingmenOrbitSpeed * Time.deltaTime);
+    }
+
+    private void DespawnWingmen()
+    {
+        if (leftWingman) Destroy(leftWingman);
+        if (rightWingman) Destroy(rightWingman);
+        leftWingman = null;
+        rightWingman = null;
     }
 }
