@@ -176,7 +176,7 @@ public class Player : MonoBehaviour
 
         bool exists = leftWingman != null || rightWingman != null;
 
-        if (toggleSpawn & exists)
+        if (toggleSpawn && exists)
         {
             DespawnWingmen();
         }
