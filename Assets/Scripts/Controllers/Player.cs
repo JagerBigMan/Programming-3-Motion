@@ -167,6 +167,11 @@ public class Player : MonoBehaviour
             currentEnergy += energyRechargeRate * Time.deltaTime;
             if (currentEnergy > maxEnergy) currentEnergy = maxEnergy;
         }
+        if(energyBar != null)
+        {
+            energyBar.maxValue = maxEnergy;
+            energyBar.value = currentEnergy;
+        }
 
     }
 
@@ -185,6 +190,7 @@ public class Player : MonoBehaviour
             SpawnWingmenPair();
         }
     }
+
     private void SpawnWingmenPair()
     {
         if (wingmenPrefab == null || wingmenPivot == null) return;
