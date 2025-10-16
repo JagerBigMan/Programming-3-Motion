@@ -15,6 +15,7 @@ public class Player : MonoBehaviour
     public float deceleration = 4f;
     public float acceleration;
     public Vector3 velocity;
+    private bool isMoving;
 
     [Header("Powerups")]
     public GameObject powerupPrefab;
@@ -29,6 +30,10 @@ public class Player : MonoBehaviour
     public float energyDrainRate = 1.0f;
     public float energyRechargeRate = 0.75f;
     public Slider energyBar;
+
+    public bool overheated = false;
+    public float overheatCooldown = 3f;
+    private float overheatTimer = 0f;
 
     private float currentMaxSpeed;
     private float currentEnergy;
@@ -100,6 +105,11 @@ public class Player : MonoBehaviour
 
         velocity = Vector3.ClampMagnitude(velocity, currentMaxSpeed);      //Limits the max speed by clamping
         transform.position += Time.deltaTime * velocity;
+
+        isMoving = Input.GetKey(KeyCode.LeftArrow) ||
+                   Input.GetKey(KeyCode.RightArrow) ||
+                   Input.GetKey(KeyCode.UpArrow) ||
+                   Input.GetKey(KeyCode.DownArrow);
     }
 
     private void DrawDetectionCircle(float radius, int sides)
@@ -151,7 +161,16 @@ public class Player : MonoBehaviour
 
     private void HandleBoost()
     {
-        bool boost = Input.GetKey(KeyCode.Space) && currentEnergy > 0f;
+        if (overheated)     //cooling phase
+        {
+            overheatTimer -= Time.deltaTime;
+            if (overheatTimer <= 0f)
+            {
+                overheated = false;
+            }
+            return;
+        }
+        bool boost = Input.GetKey(KeyCode.Space) && currentEnergy > 0f && isMoving;
 
         float targetCap = boost ? boostedMaxSpeed : baseMaxSpeed;
         float ramp = boost ? boostRampUp : boostRampDown;
@@ -160,7 +179,12 @@ public class Player : MonoBehaviour
         if (boost)
         {
             currentEnergy -= energyDrainRate * Time.deltaTime;
-            if (currentEnergy < 0f) currentEnergy = 0f;
+            if (currentEnergy <= 0f)
+            {
+                currentEnergy = 0f;
+                overheated = true;
+                overheatTimer = overheatCooldown;       //Start cooldown timer
+            }
         }
         else
         {
@@ -172,7 +196,6 @@ public class Player : MonoBehaviour
             energyBar.maxValue = maxEnergy;
             energyBar.value = currentEnergy;
         }
-
     }
 
     private void HandleWingmenInput()
