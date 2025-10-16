@@ -230,7 +230,43 @@ public class Player : MonoBehaviour
     private void RotateWingmen()
     {
         if (wingmenPivot == null) return;
+
+        wingmenPivot.position = transform.position;     //Always re-center pivot on the player
+
+        float detectionRadius = 5f;
+        float defensiveRadius = 1.2f;
+        float normalOrbitRadius = wingmenOrbitRadius;
+        bool enemyNearby = false;
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject enemy in enemies)
+        {
+            float distance = Vector3.Distance(transform.position, enemy.transform.position);
+            if (distance < detectionRadius)
+            {
+                enemyNearby = true;
+                break;
+            }
+        }
+
+        float targetRadius = enemyNearby ? defensiveRadius : normalOrbitRadius;
+        float orbitAdjustSpeed = 3f;        //How quickly the orbit radius changes, how fast the wingmen go into defensive position
+
         wingmenPivot.Rotate(0f,0f, wingmenOrbitSpeed * Time.deltaTime);
+
+        if (leftWingman)
+        {
+            Vector3 directionToLeft = (leftWingman.transform.localPosition).normalized;
+            leftWingman.transform.localPosition = Vector3.Lerp(leftWingman.transform.localPosition, directionToLeft * targetRadius, Time.deltaTime * orbitAdjustSpeed);
+            leftWingman.transform.rotation = Quaternion.identity;
+        }
+        if (rightWingman)
+        {
+            Vector3 directionToRight = (rightWingman.transform.localPosition).normalized;
+            rightWingman.transform.localPosition = Vector3.Lerp(rightWingman.transform.localPosition, directionToRight * targetRadius, Time.deltaTime * orbitAdjustSpeed);
+            rightWingman.transform.rotation = Quaternion.identity;
+        }
+        wingmenPivot.Rotate(0f, 0f, wingmenOrbitSpeed * Time.deltaTime);
     }
 
     private void DespawnWingmen()
