@@ -15,10 +15,8 @@ public class PlayerController : MonoBehaviour
 
     private FacingDirection facingDirection = FacingDirection.left;     //Sets the facing direction to left as default. 
 
-    [Header("Ground Detection")]
-    public LayerMask ground;
-
-    private bool isGrounded = false;
+    private bool grounded = false;      //grounded variable
+    private bool lastGrounded = false;
 
     void Start()
     {
@@ -38,6 +36,15 @@ public class PlayerController : MonoBehaviour
         Vector2 playerInput = new Vector2(horizontalInput, 0f);
 
         MovementUpdate(playerInput);
+
+        if (grounded != lastGrounded)
+        {
+            if (!grounded)
+            {
+                Debug.Log("Player is not grounded");
+            }
+            lastGrounded = grounded;
+        }
     }
 
     private void MovementUpdate(Vector2 playerInput)
@@ -64,19 +71,27 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        Collider2D playerCollider = GetComponent<Collider2D>();
-
-        bool grounded = playerCollider.IsTouchingLayers(ground);
-
-        if(!grounded)
-        {
-            Debug.Log("Player is not grounded");
-        }    
         return grounded;
     }
 
     public FacingDirection GetFacingDirection()
     {
         return facingDirection;
+    }
+
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if(other.gameObject.CompareTag("Ground"))
+        {
+            grounded = true;
+        }    
+    }
+
+    private void OnCollisionExit2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag("Ground"))
+        {
+            grounded = false;
+        }
     }
 }
