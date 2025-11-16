@@ -13,7 +13,12 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
 
-    private FacingDirection facingDirection = FacingDirection.left;     //Sets the facing direction to left as default. Had to make a variable to store the information of which way the character is looking.
+    private FacingDirection facingDirection = FacingDirection.left;     //Sets the facing direction to left as default. 
+
+    [Header("Ground Detection")]
+    public LayerMask ground;
+
+    private bool isGrounded = false;
 
     void Start()
     {
@@ -59,7 +64,15 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        return false;
+        Collider2D playerCollider = GetComponent<Collider2D>();
+
+        bool grounded = playerCollider.IsTouchingLayers(ground);
+
+        if(!grounded)
+        {
+            Debug.Log("Player is not grounded");
+        }    
+        return grounded;
     }
 
     public FacingDirection GetFacingDirection()
