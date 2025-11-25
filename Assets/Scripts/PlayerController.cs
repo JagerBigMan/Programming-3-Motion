@@ -22,6 +22,10 @@ public class PlayerController : MonoBehaviour
     public float jumpHeight = 3f;
     public float jumpDuration = 0.5f;
 
+    [Header("Coyote Time")]
+    public float coyoteTime = 0.1f;  //100ms of forgiveness
+    private float coyoteTimer = 0f;
+
     private bool isJumping = false;
     private float jumpTime = 0f;
     private float jumpInitialVelocity = 0f;
@@ -29,7 +33,9 @@ public class PlayerController : MonoBehaviour
     private float originalGravityScale = 1f;
 
     [Header("Fall Settings")]
-    public float terminalSpeed = -20;
+    public float terminalSpeed = -2;
+
+
 
     void Start()
     {
@@ -54,7 +60,7 @@ public class PlayerController : MonoBehaviour
 
         MovementUpdate(playerInput);
 
-        if (Input.GetKeyDown(KeyCode.Space) && grounded && !isJumping && rb != null)
+        if (Input.GetKeyDown(KeyCode.Space) && coyoteTimer > 0f && !isJumping && rb != null)        //No longer needs to be grounded, as long as it's within the coyote time
         {
             StartJump();
         }
@@ -66,6 +72,14 @@ public class PlayerController : MonoBehaviour
                 Debug.Log("Player is not grounded");
             }
             lastGrounded = grounded;
+        }
+        if (grounded)
+        {
+            coyoteTimer = coyoteTime;   //Full coyote time available
+        }
+        else
+        {
+            coyoteTimer -= Time.deltaTime;      //Counting down
         }
     }
 
