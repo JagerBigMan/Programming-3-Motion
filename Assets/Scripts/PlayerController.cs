@@ -35,6 +35,14 @@ public class PlayerController : MonoBehaviour
     [Header("Fall Settings")]
     public float terminalSpeed = -2;
 
+    [Header("Dash Settings")]
+    public float dashSpeed = 10f;
+    public float dashDuration = 0.2f;
+    public float dashCooldown = 1.5f;
+
+    private bool isDashing = false;
+    private float dashTime = 0f;
+    private float dashCooldownTimer = 0f;
 
 
     void Start()
@@ -81,11 +89,37 @@ public class PlayerController : MonoBehaviour
         {
             coyoteTimer -= Time.deltaTime;      //Counting down
         }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+        {
+            DashCheck(horizontalInput);
+        }
+        
+        if (dashCooldownTimer > 0f)
+        {
+            dashCooldownTimer -= Time.deltaTime;
+            if (dashCooldownTimer < 0f) dashCooldownTimer = 0f;
+        }
     }
 
     private void FixedUpdate()
     {
         if (rb == null) return;
+
+        if (isDashing)
+        {
+            dashTime += Time.fixedDeltaTime;
+
+            float dashDirection = (facingDirection == FacingDirection.right) ? 1f : -1f;
+            Vector2 vel = rb.linearVelocity;
+            vel.x = dashSpeed * dashDirection;
+            rb.linearVelocity = vel;
+
+            if (dashTime >= dashDuration)
+            {
+                EndDash();
+            }
+        }
 
         if (isJumping )
         {
@@ -111,6 +145,11 @@ public class PlayerController : MonoBehaviour
     {
         if (rb == null) return;
 
+        if (isDashing)
+        {
+            return;
+        }
+
         float targetHorizontalVelocity = playerInput.x * moveSpeed;
 
         rb.linearVelocity = new Vector2 (targetHorizontalVelocity, rb.linearVelocity.y);        //linear velocity is what the system suggested me to use, otherwise it won't accept velocity by itself.
@@ -125,6 +164,36 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void DashCheck(float horizontalInput)
+    {
+        if (Mathf.Abs(horizontalInput) <= 0f)
+            return;
+
+        bool canDash = grounded || coyoteTimer > 0f;
+
+        if (canDash && !isDashing && dashCooldownTimer <= 0f)
+        {
+            StartDash();
+        }
+    }
+
+    private void StartDash()
+    {
+        isDashing = true;
+        dashTime = 0f;
+        dashCooldownTimer = dashCooldown;
+
+        float dashDirection = (facingDirection == FacingDirection.right) ? 1f : -1f;
+
+        Vector2 vel = rb.linearVelocity;
+        vel.x = dashSpeed * dashDirection;
+        rb.linearVelocity = vel;
+    }
+
+    private void EndDash()
+    {
+        isDashing = false;
+    }
     private void StartJump()
     {
         isJumping = true;
