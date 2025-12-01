@@ -35,6 +35,14 @@ public class PlayerController : MonoBehaviour
     [Header("Fall Settings")]
     public float terminalSpeed = -2;
 
+    [Header("Double Jump Settings")]
+    public float doubleJumpHeight = 2.5f;
+    public float doubleJumpDuration = 0.45f;
+
+    private bool hasDoubleJumped = false;
+
+    private float currentJumpDuration = 0f;     //This toggles between normal and double jump duration.
+
     [Header("Dash Settings")]
     public float dashSpeed = 10f;
     public float dashDuration = 0.2f;
@@ -57,6 +65,8 @@ public class PlayerController : MonoBehaviour
         {
             originalGravityScale = rb.gravityScale;
         }
+
+        currentJumpDuration = jumpDuration;     //Normal jump duration
     }
 
     // Update is called once per frame
@@ -68,9 +78,16 @@ public class PlayerController : MonoBehaviour
 
         MovementUpdate(playerInput);
 
-        if (Input.GetKeyDown(KeyCode.Space) && coyoteTimer > 0f && !isJumping && rb != null)        //No longer needs to be grounded, as long as it's within the coyote time
+        if (Input.GetKeyDown(KeyCode.Space) && rb !=null)
         {
-            StartJump();
+            if (coyoteTimer > 0f && !isJumping)
+            {
+                StartJump();
+            }
+            else if (!grounded && !hasDoubleJumped)
+            {
+                StartDoubleJump();
+            }
         }
 
         if (grounded != lastGrounded)
@@ -129,7 +146,7 @@ public class PlayerController : MonoBehaviour
             vel.y += jumpGravity * Time.fixedDeltaTime;
             rb.linearVelocity = vel;
 
-            if (jumpTime >= jumpDuration)
+            if (jumpTime >= currentJumpDuration)
             {
                 EndJump();
             }
@@ -202,10 +219,34 @@ public class PlayerController : MonoBehaviour
 
         rb.gravityScale = 0f;       //Disable gravity
 
-        jumpInitialVelocity = (2f * jumpHeight) / jumpDuration;                 
+        currentJumpDuration = jumpDuration;
+
+        jumpInitialVelocity = (2f * jumpHeight) / jumpDuration;
         jumpGravity = (-2f * jumpHeight) / (jumpDuration * jumpDuration);
 
         Vector2 vel = rb.linearVelocity;
+        vel.y = jumpInitialVelocity;
+        rb.linearVelocity = vel;
+    }
+    
+    private void StartDoubleJump()
+    {
+        isJumping = true;
+        hasDoubleJumped = true;
+        jumpTime = 0f;
+        rb.gravityScale = 0f;
+
+        currentJumpDuration = doubleJumpDuration;
+        jumpInitialVelocity = (2f * doubleJumpHeight) / doubleJumpDuration;
+        jumpGravity = (-2f * doubleJumpHeight) / (doubleJumpDuration * doubleJumpDuration);
+
+        Vector2 vel = rb.linearVelocity;
+
+        if (vel.y < 0f)
+        {
+            vel.y = 0f;
+        }
+
         vel.y = jumpInitialVelocity;
         rb.linearVelocity = vel;
     }
@@ -240,6 +281,8 @@ public class PlayerController : MonoBehaviour
             {
                 EndJump();
             }
+
+            hasDoubleJumped = false;
         }    
     }
 
